@@ -145,76 +145,78 @@ namespace ScaleExtensions
 		public static Bitmap ScaleRotSprite(this Bitmap bitmap, double scaleX, double scaleY, bool disposeOfOriginal = false)
 		{
 			var rotSprite = bitmap.Scale2X(true, false).Scale2X(true, true).Scale2X(true, true).ScaleNearestNeighbor(0.125 * scaleX, 0.125 * scaleY, true);
-
-			//Apply restore single pixel details
 			var result = new Bitmap(rotSprite);
 
-			for (var x = 0; x < rotSprite.Width; x++)
+			//Apply restore single pixel details - ONLY if the scaleX or scaleY is less than 1
+			if (scaleX < 1 || scaleY < 1)
 			{
-				for (var y = 0; y < rotSprite.Height; y++)
+				for (var x = 0; x < rotSprite.Width; x++)
 				{
-					//Need FOUR side to fix single pixel details?
-					var matches = 0;
+					for (var y = 0; y < rotSprite.Height; y++)
+					{
+						//Need FOUR side to fix single pixel details?
+						var matches = 0;
 
-					if (GetPixelSafe(rotSprite, x + 1, y) == bitmap.GetPixelSafeScaled(x + 1, y, 1 / scaleX, 1 / scaleY))
-					{
-						matches++;
-					}
-					if (GetPixelSafe(rotSprite, x - 1, y) == bitmap.GetPixelSafeScaled(x - 1, y, 1 / scaleX, 1 / scaleY))
-					{
-						matches++;
-					}
-					if (GetPixelSafe(rotSprite, x, y - 1) == bitmap.GetPixelSafeScaled(x, y - 1, 1 / scaleX, 1 / scaleY))
-					{
-						matches++;
-					}
-					if (GetPixelSafe(rotSprite, x, y + 1) == bitmap.GetPixelSafeScaled(x, y + 1, 1 / scaleX, 1 / scaleY))
-					{
-						matches++;
-					}
-
-					if (matches >= 4) //If we're matching on all sides, use this pixel
-					{
-						result.SetPixel(x, y, bitmap.GetPixelSafeScaled(x, y, 1 / scaleX, 1 / scaleY));
-						continue;
-					}
-
-					//Further check for single pixel detail
-					if (matches == 3)
-					{
-						var targetPixel = bitmap.GetPixelSafeScaled(x, y, 1 / scaleX, 1 / scaleY);
-						if (rotSprite.GetPixelSafe(x, y) != targetPixel)
+						if (GetPixelSafe(rotSprite, x + 1, y) == bitmap.GetPixelSafeScaled(x + 1, y, 1 / scaleX, 1 / scaleY))
 						{
-							var anyMatchingSidePixels = false;
-							for (var x1 = -3; x1 < 4; x1++)
+							matches++;
+						}
+						if (GetPixelSafe(rotSprite, x - 1, y) == bitmap.GetPixelSafeScaled(x - 1, y, 1 / scaleX, 1 / scaleY))
+						{
+							matches++;
+						}
+						if (GetPixelSafe(rotSprite, x, y - 1) == bitmap.GetPixelSafeScaled(x, y - 1, 1 / scaleX, 1 / scaleY))
+						{
+							matches++;
+						}
+						if (GetPixelSafe(rotSprite, x, y + 1) == bitmap.GetPixelSafeScaled(x, y + 1, 1 / scaleX, 1 / scaleY))
+						{
+							matches++;
+						}
+
+						if (matches >= 4) //If we're matching on all sides, use this pixel
+						{
+							result.SetPixel(x, y, bitmap.GetPixelSafeScaled(x, y, 1 / scaleX, 1 / scaleY));
+							continue;
+						}
+
+						//Further check for single pixel detail
+						if (matches == 3)
+						{
+							var targetPixel = bitmap.GetPixelSafeScaled(x, y, 1 / scaleX, 1 / scaleY);
+							if (rotSprite.GetPixelSafe(x, y) != targetPixel)
 							{
-								if (anyMatchingSidePixels)
+								var anyMatchingSidePixels = false;
+								for (var x1 = -3; x1 < 4; x1++)
 								{
-									break;
-								}
-
-								for (var y1 = -3; y1 < 4; y1++)
-								{
-									var dist = Math.Abs(x1) + Math.Abs(y1);
-									if (dist == 0 || dist > 3)
+									if (anyMatchingSidePixels)
 									{
-										continue;
-									}
-
-									if (rotSprite.GetPixelSafe(x + x1, y + y1) == targetPixel)
-									{
-										anyMatchingSidePixels = true;
 										break;
 									}
+
+									for (var y1 = -3; y1 < 4; y1++)
+									{
+										var dist = Math.Abs(x1) + Math.Abs(y1);
+										if (dist == 0 || dist > 3)
+										{
+											continue;
+										}
+
+										if (rotSprite.GetPixelSafe(x + x1, y + y1) == targetPixel)
+										{
+											anyMatchingSidePixels = true;
+											break;
+										}
+									}
 								}
-							}
 
-							if (anyMatchingSidePixels == false) //This is a single pixel in isolation "like an island", add it to the final result
-							{
-								result.SetPixel(x, y, targetPixel);
-								continue;
-							}
+								if (anyMatchingSidePixels == false) //This is a single pixel in isolation "like an island", add it to the final result
+								{
+									result.SetPixel(x, y, targetPixel);
+									continue;
+								}
 
+							}
 						}
 					}
 				}
