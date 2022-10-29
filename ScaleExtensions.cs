@@ -5,6 +5,12 @@ namespace ScaleExtensions
 {
 	public static class ScaleExtensions
 	{
+		/// <summary>
+		/// Compares the distance between two colors
+		/// </summary>
+		/// <param name="e1">Color 1</param>
+		/// <param name="e2">Color 2</param>
+		/// <returns></returns>
 		//https://stackoverflow.com/a/9085524
 		static double Dist(Color e1, Color e2)
 		{
@@ -15,6 +21,13 @@ namespace ScaleExtensions
 			return Math.Sqrt((((512 + rmean) * r * r) >> 8) + 4 * g * g + (((767 - rmean) * b * b) >> 8));
 		}
 
+		/// <summary>
+		/// Are these colors more similar to each other than a third color?
+		/// </summary>
+		/// <param name="a">Color1</param>
+		/// <param name="b">Color2</param>
+		/// <param name="input">Compare Color</param>
+		/// <returns></returns>
 		static bool Similar(Color a, Color b, Color input)
 		{
 			if (a == b)
@@ -26,11 +39,25 @@ namespace ScaleExtensions
 			return dist < Dist(a, input) && dist < Dist(b, input);
 		}
 
+		/// <summary>
+		/// Are these colors more different to each other than a third color?
+		/// </summary>
+		/// <param name="a">Color1</param>
+		/// <param name="b">Color2</param>
+		/// <param name="input">Compare Color</param>
+		/// <returns></returns>
 		static bool Different(Color a, Color b, Color input)
 		{
 			return !Similar(a, b, input);
 		}
 
+		/// <summary>
+		/// Set the color of a pixel on a bitmap without exceeding boundaries
+		/// </summary>
+		/// <param name="bitmap">The bitmap</param>
+		/// <param name="x">The X coordinate</param>
+		/// <param name="y">The Y coordinate</param>
+		/// <param name="color">The color</param>
 		public static void SetPixelSafe(this Bitmap bitmap, int x, int y, Color color)
 		{
 			if (x < 0)
@@ -53,11 +80,27 @@ namespace ScaleExtensions
 			bitmap.SetPixel(x, y, color);
 		}
 
+		/// <summary>
+		/// Get a scaled pixel from a bitmap without exceeding boundaries
+		/// </summary>
+		/// <param name="bitmap">The bitmap</param>
+		/// <param name="x">The X pixel position</param>
+		/// <param name="y">The Y pixel position</param>
+		/// <param name="xScale">The x pixel scale</param>
+		/// <param name="yScale">The y pixel scale</param>
+		/// <returns></returns>
 		public static Color GetPixelSafeScaled(this Bitmap bitmap, int x, int y, double xScale, double yScale)
 		{
 			return bitmap.GetPixelSafe((int)Math.Round(x * xScale), (int)Math.Round(y * yScale));
 		}
 
+		/// <summary>
+		/// Get a pixel from a bitmap without exceeding boundaries
+		/// </summary>
+		/// <param name="bitmap">The bitmap</param>
+		/// <param name="x">The X pixel position</param>
+		/// <param name="y">The Y pixel position</param>
+		/// <returns></returns>
 		public static Color GetPixelSafe(this Bitmap bitmap, int x, int y)
 		{
 			if (x < 0)
@@ -81,6 +124,13 @@ namespace ScaleExtensions
 			return bitmap.GetPixel(x, y);
 		}
 
+		/// <summary>
+		/// Scale bitmap using 2X algoritm
+		/// </summary>
+		/// <param name="bitmap">The source bitmap</param>
+		/// <param name="useSimilar">If we should use similar or exact pixels for matching</param>
+		/// <param name="disposeOfOriginal">If we want to dispose of the original image</param>
+		/// <returns></returns>
 		public static Bitmap Scale2X(this Bitmap bitmap, bool useSimilar = false, bool disposeOfOriginal = false)
 		{
 			var result = new Bitmap(bitmap.Width * 2, bitmap.Height * 2);
@@ -119,6 +169,14 @@ namespace ScaleExtensions
 			return result;
 		}
 
+		/// <summary>
+		/// Scale bitmap using the nearest neighbour algorithm
+		/// </summary>
+		/// <param name="bitmap">The Bitmap</param>
+		/// <param name="scaleX">The XScale</param>
+		/// <param name="scaleY">The YScale</param>
+		/// <param name="disposeOfOriginal">If we should dispose of the original bitmap</param>
+		/// <returns></returns>
 		public static Bitmap ScaleNearestNeighbor(this Bitmap bitmap, double scaleX, double scaleY, bool disposeOfOriginal = false)
 		{
 			if (scaleX <= 0 || scaleY <= 0)
@@ -142,6 +200,14 @@ namespace ScaleExtensions
 			return result;
 		}
 
+		/// <summary>
+		/// Scale a bitmap using Rotsprite
+		/// </summary>
+		/// <param name="bitmap">The Bitmap</param>
+		/// <param name="scaleX">The XScale</param>
+		/// <param name="scaleY">The YScale</param>
+		/// <param name="disposeOfOriginal">If we should dispose of the original bitmap</param>
+		/// <returns></returns>
 		public static Bitmap ScaleRotSprite(this Bitmap bitmap, double scaleX, double scaleY, bool disposeOfOriginal = false)
 		{
 			var rotSprite = bitmap.Scale2X(true, false).Scale2X(true, true).Scale2X(true, true).ScaleNearestNeighbor(0.125 * scaleX, 0.125 * scaleY, true);
